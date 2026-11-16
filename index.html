@@ -59,14 +59,14 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share &middot; v1.4</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.5</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
 <main>
 <!-- Shared view mode -->
 <section id="viewMode" class="hidden">
-  <div class="viewbar noprint"><span class="muted">Digital CV</span><span class="row" style="margin:0"><button class="btn ghost" onclick="window.print()">Save as PDF</button><a class="btn" href="./" style="text-decoration:none">Make your own</a></span></div>
+  <div class="viewbar noprint"><span class="muted">Digital CV</span><span class="row" style="margin:0"><button class="btn ghost" onclick="printCV()">Save as PDF</button><a class="btn" href="./" style="text-decoration:none">Make your own</a></span></div>
   <div id="viewCv"></div>
 </section>
 
@@ -135,7 +135,7 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 
   <div id="t4" class="pane hidden">
     <div class="card"><h2>Share and export</h2>
-      <div class="row"><button class="btn" id="mkLink" type="button">Create share link</button><button class="btn ghost" id="dlHtml" type="button">Download HTML</button><button class="btn ghost" id="dlJson" type="button">Download JSON</button><button class="btn ghost" onclick="window.print()">Print / PDF</button></div>
+      <div class="row"><button class="btn" id="mkLink" type="button">Create share link</button><button class="btn ghost" id="dlHtml" type="button">Download HTML</button><button class="btn ghost" id="dlJson" type="button">Download JSON</button><button class="btn ghost" onclick="printCV()">Print / PDF</button></div>
       <input id="linkOut" class="hidden" readonly style="margin-top:10px">
       <div class="note">The link carries the CV inside the URL itself, so anyone with it can read the CV and nothing sits on a server. Gaps, LinkedIn tips and the cover letter are never included.</div></div>
     <div id="cvPane"><div id="cvOut" class="muted">Nothing yet. Complete step 3.</div></div>
@@ -160,7 +160,7 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)};
-let DATA=null;
+let DATA=null,VIEW=null;
 
 /* ---- text hygiene: no em/en dashes ---- */
 function clean(s){return String(s==null?"":s).replace(/\s*[—―]\s*/g,", ").replace(/(\d)\s*–\s*(\d)/g,"$1 to $2").replace(/\s*–\s*/g,", ").replace(/\s*&mdash;\s*/g,", ")}
@@ -448,12 +448,27 @@ $("#dlHtml").onclick=()=>{if(!DATA)return toast("Build your CV first");
   const css=document.querySelector("style").textContent;
   dl("cv.html",`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc((DATA.candidate||{}).name)} CV</title><style>${css}body{padding:16px}</style></head><body>${cvHtml(shareable(DATA))}</body></html>`,"text/html")};
 
+
+/* ---- print / save as PDF: renders the CV alone in a hidden frame so no page styles can blank it ---- */
+function printCV(){
+  const d=DATA?shareable(DATA):VIEW;
+  if(!d){toast("Build your CV first");return}
+  const css=document.querySelector("style").textContent;
+  const doc=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc((d.candidate||{}).name||"CV")} CV</title><style>${css}@page{margin:14mm}html,body{background:#fff!important;color:#1b1b1b}body{padding:0}.cv{border:0!important;padding:0!important;max-width:none!important;margin:0!important}</style></head><body>${cvHtml(d)}</body></html>`;
+  const old=document.getElementById("printFrame");if(old)old.remove();
+  const f=document.createElement("iframe");f.id="printFrame";f.setAttribute("aria-hidden","true");
+  f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  document.body.appendChild(f);
+  const w=f.contentWindow;w.document.open();w.document.write(doc);w.document.close();
+  setTimeout(()=>{try{w.focus();w.print()}catch(e){toast("Printing was blocked. Use Download HTML, open it and print.")}},350);
+}
+
 /* ---- theme ---- */
 $("#themeBtn").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark"};
 
 /* ---- boot: shared view ---- */
 (async()=>{const m=location.hash.match(/^#cv=(.+)$/);if(!m)return;
-  try{const d=await unpack(m[1]);$("#builder").classList.add("hidden");$("#viewMode").classList.remove("hidden");$("#viewCv").innerHTML=cvHtml(deepClean(d));document.title=((d.candidate||{}).name||"Digital")+" | CV";document.querySelector("header.top small").textContent="digital CV"}
+  try{const d=await unpack(m[1]);VIEW=d;$("#builder").classList.add("hidden");$("#viewMode").classList.remove("hidden");$("#viewCv").innerHTML=cvHtml(deepClean(d));document.title=((d.candidate||{}).name||"Digital")+" | CV";document.querySelector("header.top small").textContent="digital CV"}
   catch(e){toast("This CV link looks broken")}})();
 
 </script>
