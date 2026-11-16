@@ -37,6 +37,8 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 .gap{border-left:4px solid var(--warn);padding:4px 12px;margin:10px 0}.gap.high{border-color:var(--bad)}.gap.low{border-color:var(--ok)}
 .hidden{display:none!important}
 .note{font-size:13px;color:var(--mute);border:1px dashed var(--line);border-radius:8px;padding:8px 10px;margin-top:8px}
+.rad{display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--ink);font-size:14px}.rad input{width:auto}
+.status{font-size:13px;margin-top:6px;min-height:18px;color:var(--mute)}.status.ok{color:var(--ok);font-weight:600}.status.bad{color:var(--bad)}
 /* CV sheet */
 .cv{background:#fff;color:#1b1b1b;border:1px solid var(--line);border-radius:6px;padding:36px 40px;max-width:820px;margin:0 auto;font:14px/1.5 Georgia,"Times New Roman",serif}
 .cv h1{font:700 28px/1.2 system-ui,sans-serif;margin:0}
@@ -81,23 +83,33 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 
   <div id="t1" class="pane">
     <div class="grid2">
-      <div class="card"><h2>Your CV</h2><label for="cvIn">Paste the full text of your CV</label><textarea id="cvIn" placeholder="Paste CV text here"></textarea>
-        <div class="row"><input type="file" id="cvFile" accept=".txt,.md,.json" style="max-width:260px"><span class="muted">.txt or .md. For PDF or Word, copy the text.</span></div></div>
+      <div class="card"><h2>Your CV</h2>
+        <div class="row" style="margin-top:0">
+          <label class="rad"><input type="radio" name="cvsrc" value="text" checked> Paste text</label>
+          <label class="rad"><input type="radio" name="cvsrc" value="file"> Upload file</label>
+        </div>
+        <div id="cvFileBox" class="hidden">
+          <label for="cvFile">PDF, Word (.docx), .txt or .md</label>
+          <input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,.json">
+        </div>
+        <label for="cvIn">CV content</label><textarea id="cvIn" placeholder="Paste CV text here, or upload a file above"></textarea>
+        <div id="cvStatus" class="status" aria-live="polite"></div></div>
       <div class="card"><h2>Target role</h2>
-        <div class="row" style="margin-top:0" role="radiogroup" aria-label="Job source">
-          <label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--ink)"><input type="radio" name="src" value="text" checked style="width:auto"> Paste description</label>
-          <label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--ink)"><input type="radio" name="src" value="url" style="width:auto"> Use a URL</label>
+        <div class="row" style="margin-top:0">
+          <label class="rad"><input type="radio" name="src" value="text" checked> Paste description</label>
+          <label class="rad"><input type="radio" name="src" value="url"> Job or company link</label>
         </div>
         <div id="urlBox" class="hidden">
-          <label for="jobUrl">Job link (LinkedIn job, company careers page or any job board)</label><input id="jobUrl" type="url" placeholder="https://www.linkedin.com/jobs/view/...">
-          <label for="coUrl">Company link (optional, LinkedIn /company page or website)</label><input id="coUrl" type="url" placeholder="https://www.linkedin.com/company/...">
-          <div class="row"><button class="btn" id="fetchUrl" type="button">Fetch details</button><span id="fetchMsg" class="muted"></span></div>
-          <div class="note">Fetching uses the free r.jina.ai reader, which receives the URL you enter. LinkedIn often blocks automated reads and may need a login. If it fails, open the page, copy the text and paste it below. Fetched text is editable.</div>
+          <label for="jobUrl">One link: LinkedIn job, LinkedIn /company page, careers page or job board</label>
+          <input id="jobUrl" type="url" placeholder="https://www.linkedin.com/jobs/view/...">
+          <div class="note">Details load automatically when you paste the link, then the match runs. Fetching uses the free r.jina.ai reader, which receives the link. LinkedIn may block it; if so, paste the text below.</div>
         </div>
-        <label for="jdIn">Job description</label><textarea id="jdIn" placeholder="Paste job description here, or fetch it from a URL"></textarea>
-        <label for="coIn">Company information (optional)</label><textarea id="coIn" style="min-height:90px" placeholder="About the company, mission, products, culture. Helps the cover letter and LinkedIn advice."></textarea></div>
+        <label for="jdIn">Job description</label><textarea id="jdIn" placeholder="Paste job description here, or paste a link above"></textarea>
+        <div id="jdStatus" class="status" aria-live="polite"></div>
+        <details style="margin-top:8px"><summary class="muted">Company notes (optional)</summary>
+          <textarea id="coIn" style="min-height:90px" placeholder="About the company, mission, culture. Filled automatically when the link is a company page."></textarea></details></div>
     </div>
-    <div class="row"><button class="btn" id="goMatch" type="button">Analyse match</button><span class="muted">Nothing leaves your browser unless you use the API option in step 3.</span></div>
+    <div class="row"><button class="btn" id="goMatch" type="button">Analyse match</button><span id="goMsg" class="muted">Nothing leaves your browser unless you fetch a link or use the API option in step 3.</span></div>
   </div>
 
   <div id="t2" class="pane hidden">
@@ -213,30 +225,75 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
 
 Use \\n\\n between cover letter paragraphs. Leave a field as an empty string or empty array if the CV has nothing for it.`;
 const jdText=()=>$("#jdIn").value.trim()||($("#jobUrl").value.trim()?"URL: "+$("#jobUrl").value.trim():"");
-const coText=()=>{const t=$("#coIn").value.trim(),u=$("#coUrl").value.trim();return t||(u?"URL: "+u:"(none)")};
+const coText=()=>{const t=$("#coIn").value.trim(),u=$("#jobUrl").value.trim();return t||(/linkedin\.com\/company\//i.test(u)?"URL: "+u:"(none)")};
 const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CO}}",()=>coText());
 
-/* ---- URL sourcing ---- */
-document.querySelectorAll('input[name=src]').forEach(r=>r.onchange=()=>$("#urlBox").classList.toggle("hidden",document.querySelector('input[name=src]:checked').value!=="url"));
+/* ---- input handling: status, upload, link auto-fetch ---- */
+const wc=t=>(t.trim().match(/\S+/g)||[]).length;
+function setStatus(sel,ok,msg){const e=$(sel);e.className="status "+(ok===true?"ok":ok===false?"bad":"");e.textContent=(ok===true?"✓ ":ok===false?"✗ ":"")+msg}
+let cvName="",pendingAuto=false;
+const cvOk=()=>wc($("#cvIn").value)>=30, jdOk=()=>wc($("#jdIn").value)>=30;
+function updCv(){const n=wc($("#cvIn").value);if(!n)setStatus("#cvStatus",null,"");else if(cvOk())setStatus("#cvStatus",true,"CV added"+(cvName?" ("+cvName+")":"")+", "+n+" words");else setStatus("#cvStatus",false,"That looks too short for a CV ("+n+" words)")}
+function updJd(extra){const n=wc($("#jdIn").value);if(!n)setStatus("#jdStatus",null,"");else if(jdOk())setStatus("#jdStatus",true,"Job description added, "+n+" words"+(extra||""));else setStatus("#jdStatus",false,"Too short to analyse ("+n+" words)")}
+function maybeAuto(){if(pendingAuto&&cvOk()&&jdOk()){pendingAuto=false;$("#goMsg").textContent="";if(runMatch())go("t2")}}
+$("#cvIn").addEventListener("input",()=>{cvName="";updCv();maybeAuto()});
+$("#jdIn").addEventListener("input",()=>updJd());
+document.querySelectorAll("input[name=src]").forEach(r=>r.onchange=()=>$("#urlBox").classList.toggle("hidden",document.querySelector("input[name=src]:checked").value!=="url"));
+document.querySelectorAll("input[name=cvsrc]").forEach(r=>r.onchange=()=>$("#cvFileBox").classList.toggle("hidden",document.querySelector("input[name=cvsrc]:checked").value!=="file"));
+
+const loadScript=u=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=u;s.onload=res;s.onerror=()=>rej(new Error("Could not load reader library"));document.head.appendChild(s)});
+async function fileToText(f){
+  const ext=f.name.split(".").pop().toLowerCase();
+  if(["txt","md","json"].includes(ext))return await f.text();
+  const buf=await f.arrayBuffer();
+  if(ext==="pdf"){
+    if(!window.pdfjsLib){await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"}
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;let out="";
+    for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const c=await pg.getTextContent();let y=null;c.items.forEach(it=>{const ny=it.transform[5];out+=(y!==null&&Math.abs(ny-y)>3?"\n":" ")+it.str;y=ny});out+="\n\n"}
+    return out.replace(/[ \t]+/g," ").replace(/\n /g,"\n").trim();
+  }
+  if(ext==="docx"){
+    if(!window.mammoth)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js");
+    return (await mammoth.extractRawText({arrayBuffer:buf})).value;
+  }
+  throw new Error("Unsupported file type ."+ext);
+}
+$("#cvFile").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;setStatus("#cvStatus",null,"Reading "+f.name+"...");
+  try{const t=await fileToText(f);if(wc(t)<30)throw new Error("No readable text found. Scanned PDFs need OCR, so paste the text instead");
+    $("#cvIn").value=t;cvName=f.name;updCv();maybeAuto()}
+  catch(err){setStatus("#cvStatus",false,"Could not read file: "+err.message)}};
+
 async function readUrl(u){
-  if(!/^https?:\/\//i.test(u))throw new Error("Enter a full link starting with https://");
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),25000);
   try{const r=await fetch("https://r.jina.ai/"+u,{signal:ctl.signal,headers:{"Accept":"text/plain"}});
-    if(!r.ok)throw new Error("Reader returned "+r.status);
-    let t=(await r.text()).trim();
-    if(t.length<400||/authwall|sign in to view|join linkedin|log in to linkedin/i.test(t.slice(0,1500)))throw new Error("Page is behind a login or returned too little text");
+    if(!r.ok)throw new Error("reader returned "+r.status);
+    const t=(await r.text()).trim();
+    if(t.length<400||/authwall|sign in to view|join linkedin|log in to linkedin/i.test(t.slice(0,1500)))throw new Error("page is behind a login or returned too little text");
     return t.slice(0,15000)}
   finally{clearTimeout(to)}}
-$("#fetchUrl").onclick=async()=>{
-  const m=$("#fetchMsg"),ju=$("#jobUrl").value.trim(),cu=$("#coUrl").value.trim();
-  if(!ju&&!cu){m.textContent="Add a job link or company link";return}
-  $("#fetchUrl").disabled=true;m.textContent="Fetching...";const out=[];
-  for(const [u,el,name] of [[ju,"#jdIn","job"],[cu,"#coIn","company"]]){
-    if(!u)continue;
-    try{$(el).value=await readUrl(u);out.push(name+" loaded")}
-    catch(e){out.push(name+" failed ("+e.message+"). Paste the text instead.")}
-  }
-  m.textContent=out.join(". ");$("#fetchUrl").disabled=false};
+let fetching=null,lastUrl="";
+function fetchLink(){
+  const u=$("#jobUrl").value.trim();
+  if(!/^https?:\/\/\S+\.\S+/i.test(u))return Promise.resolve(false);
+  if(fetching&&u===lastUrl)return fetching;
+  lastUrl=u;const isCo=/linkedin\.com\/company\//i.test(u);
+  setStatus("#jdStatus",null,"Fetching details...");
+  fetching=readUrl(u).then(t=>{
+    if(isCo){$("#coIn").value=t;$("#coIn").parentElement.open=true;setStatus("#jdStatus",true,"Company details loaded. Paste or link the job itself for the match.");return true}
+    $("#jdIn").value=t;pendingAuto=true;updJd(" (fetched)");
+    if(!cvOk())$("#goMsg").textContent="Job loaded. Add your CV and the match will run automatically.";
+    maybeAuto();return true;
+  }).catch(e=>{setStatus("#jdStatus",false,"Could not fetch ("+e.message+"). Paste the job text above instead.");return false})
+  .finally(()=>{fetching=null});
+  return fetching}
+let tmr;
+$("#jobUrl").addEventListener("input",()=>{clearTimeout(tmr);tmr=setTimeout(fetchLink,700)});
+$("#jobUrl").addEventListener("paste",()=>setTimeout(fetchLink,50));
+$("#jobUrl").addEventListener("change",fetchLink);
+$("#goMatch").onclick=async()=>{
+  if(!$("#jdIn").value.trim()&&$("#jobUrl").value.trim())await fetchLink();
+  if(runMatch())go("t2")};
 
 /* ---- tabs ---- */
 function go(t){document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("hidden",p.id!==t));document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t))}
@@ -253,7 +310,8 @@ function keywords(jd){
 }
 function runMatch(){
   const cv=$("#cvIn").value.toLowerCase(),jd=$("#jdIn").value;
-  if(!cv.trim()||!jd.trim()){toast("Add both CV and job description");return false}
+  if(!cv.trim()){toast("Add your CV first");return false}
+  if(!jd.trim()){toast("Add the job description, or paste a job link");return false}
   const kws=keywords(jd),ok=kws.filter(k=>cv.includes(k)),no=kws.filter(k=>!cv.includes(k));
   const sc=kws.length?Math.round(ok.length/kws.length*100):0;
   $("#mBar").style.width=sc+"%";$("#mScore").textContent=sc+"%";
@@ -261,8 +319,6 @@ function runMatch(){
   $("#kwNo").innerHTML=no.map(k=>`<span class="chip no">${esc(k)}</span>`).join("")||'<span class="muted">None</span>';
   return true;
 }
-$("#goMatch").onclick=()=>{if(runMatch())go("t2")};
-$("#cvFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("#cvIn").value=r.result};r.readAsText(f)};
 
 /* ---- prompt ---- */
 $("#copyPrompt").onclick=async()=>{if(!$("#cvIn").value.trim()||!jdText()){toast("Add CV and job description first");return}
