@@ -29,10 +29,10 @@ If either of the first two is missing, ask for it in one short message. Do not g
 5. **Close gaps.** For each partial or missing must-have: severity, then 2 to 4 honest options (reframe adjacent experience, small project, course or certification with time estimate, how to address it in the letter or interview).
 6. **LinkedIn.** Headline (max 220 chars), About (max 2000 chars, first person), skills to add or pin, experience rewrites, featured items.
 7. **Cover letter.** 250 to 350 words. Specific opening, two or three real achievements, one gap addressed openly, relaxed close. Follow the writing rules above.
-8. **Digital CV.** Output the structured JSON (schema in `prompts/master-prompt.md`). The CVForge web page turns that JSON into a shareable link, print-ready PDF and downloadable HTML.
+8. **Digital CV.** Output the structured JSON (schema in `master-prompt.md`). The CVForge web page turns that JSON into a shareable link, print-ready PDF and downloadable HTML.
 
 ## Output
-Either the JSON in `prompts/master-prompt.md` (when feeding the CVForge page) or the same content as readable sections: Match summary, Tailored CV, Highlights, Gaps and how to cater, LinkedIn changes, Cover letter.
+Either the JSON in `master-prompt.md` (when feeding the CVForge page) or the same content as readable sections: Match summary, Tailored CV, Highlights, Gaps and how to cater, LinkedIn changes, Cover letter.
 
 ## Final check before replying
 - Search the output for the characters "—" and "–". Remove all.

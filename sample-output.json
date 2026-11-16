@@ -1,0 +1,14 @@
+{
+  "match": { "score": 78, "verdict": "Strong delivery and stakeholder fit, light on cloud cost tooling." },
+  "candidate": { "name": "Alex Sample", "headline": "Technology Delivery Lead | Cloud Migration | Agile at Scale", "email": "alex@example.com", "phone": "+00 000 000 000", "location": "London, UK", "links": [ { "label": "LinkedIn", "url": "https://www.linkedin.com/in/example" } ] },
+  "summary": "Delivery lead with ten years running multi-team cloud programmes for banks and insurers. Comfortable owning the plan, the budget and the awkward conversations with stakeholders. Looking to bring that to a platform engineering role.",
+  "skills": [ { "group": "Delivery", "items": [ "Programme planning", "Risk management", "Agile coaching" ] }, { "group": "Cloud", "items": [ "AWS", "Azure", "Terraform" ] } ],
+  "experience": [ { "role": "Delivery Lead", "company": "Example Corp", "period": "2019 to Present", "location": "London", "bullets": [ "Led a 40 person migration of 120 applications to AWS across three regions.", "Cut release cycle from monthly to weekly by introducing trunk based development." ] } ],
+  "education": [ { "title": "BSc Computer Science", "org": "Example University", "period": "2012 to 2015" } ],
+  "certifications": [ "AWS Solutions Architect Associate" ],
+  "projects": [],
+  "highlights": [ "Migration leadership at scale, 120 applications moved to AWS." ],
+  "gaps": [ { "requirement": "FinOps tooling", "status": "partial", "severity": "medium", "howToCater": [ "Reframe the budget tracking you did on the AWS migration as cost governance.", "Take the FinOps Certified Practitioner course, about 10 hours." ] } ],
+  "linkedin": { "headline": "Delivery Lead | Cloud migration for regulated industries | AWS certified", "about": "I help large teams move to the cloud without losing a release along the way.", "skillsToAdd": [ "FinOps", "Platform engineering" ], "experienceTweaks": [ { "role": "Delivery Lead", "suggestion": "Open with the 120 application migration, then team size." } ], "featured": [ "A short write up of the migration approach" ] },
+  "coverLetter": "Dear Hiring Team,\n\nYour platform team is moving from lift and shift to something more deliberate, and that is the stage I enjoy most.\n\nBest regards,\nAlex"
+}
