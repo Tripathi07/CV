@@ -36,6 +36,7 @@ If either of the first two is missing, ask for it in one short message. Do not g
 Either the JSON in `master-prompt.md` (when feeding the CVForge page) or the same content as readable sections: Match summary, Tailored CV, Highlights, Gaps and how to cater, LinkedIn changes, Cover letter.
 
 ## Final check before replying
-- Search the output for the characters "—" and "–". Remove all.
+- Search the output for em dashes and en dashes. Remove all.
+- Inside JSON strings use single quotes, never unescaped double quotes.
 - Confirm every fact exists in the user's CV.
 - Confirm the cover letter does not start with "I am writing to apply".

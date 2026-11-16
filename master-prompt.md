@@ -1,6 +1,6 @@
 # CVForge Master Prompt (paste into any LLM)
 
-Works in ChatGPT, Claude, Gemini, Copilot, Perplexity, Mistral, Llama based chat tools, or any API. Replace the two placeholders, send, then paste the JSON reply into the CVForge page (or use it as is).
+Works in ChatGPT, Claude, Gemini, Copilot, Perplexity, Mistral, Llama based chat tools, or any API. Replace the placeholders, send, then paste the JSON reply into the CVForge page (or use it as is).
 
 ---
 
@@ -28,7 +28,7 @@ Work in this order, silently, then output only the JSON described below.
 1. Parse the job description. List must-have requirements, nice-to-haves, seniority signals, domain, tools, soft skills and the exact keywords an ATS would scan for.
 2. Map every requirement to evidence in the CV. Mark each as strong, partial or missing.
 3. Rewrite the CV for this role:
-   - Summary: 3 to 4 lines, role specific, first person implied (no "I"), no clichés.
+   - Summary: 3 to 4 lines, role specific, first person implied (no "I"), no cliches.
    - Skills: group them, put the ones the role asks for first, use the job description's wording where the candidate truly has the skill.
    - Experience: keep every real role. Reorder bullets by relevance. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. Max 5 bullets for recent roles, 3 for older ones.
    - Keep it to what fits two pages.

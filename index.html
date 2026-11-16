@@ -59,7 +59,7 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.4</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
@@ -155,6 +155,7 @@ pre.out{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1
 <div id="toast"></div>
 
 <script>
+
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -454,6 +455,7 @@ $("#themeBtn").onclick=()=>{const r=document.documentElement;const dark=r.datase
 (async()=>{const m=location.hash.match(/^#cv=(.+)$/);if(!m)return;
   try{const d=await unpack(m[1]);$("#builder").classList.add("hidden");$("#viewMode").classList.remove("hidden");$("#viewCv").innerHTML=cvHtml(deepClean(d));document.title=((d.candidate||{}).name||"Digital")+" | CV";document.querySelector("header.top small").textContent="digital CV"}
   catch(e){toast("This CV link looks broken")}})();
+
 </script>
 </body>
 </html>
