@@ -14,12 +14,17 @@ INPUTS
 </CV>
 
 <JOB_DESCRIPTION>
-{{PASTE JOB DESCRIPTION HERE}}
+{{PASTE JOB DESCRIPTION HERE, OR A JOB URL IF YOUR LLM CAN BROWSE}}
 </JOB_DESCRIPTION>
+
+<COMPANY_CONTEXT>
+{{OPTIONAL: COMPANY ABOUT TEXT OR LINKEDIN /company URL, or write none}}
+</COMPANY_CONTEXT>
 
 TASK
 Work in this order, silently, then output only the JSON described below.
 
+0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
 1. Parse the job description. List must-have requirements, nice-to-haves, seniority signals, domain, tools, soft skills and the exact keywords an ATS would scan for.
 2. Map every requirement to evidence in the CV. Mark each as strong, partial or missing.
 3. Rewrite the CV for this role:

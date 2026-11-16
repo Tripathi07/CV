@@ -9,8 +9,9 @@ Portable skill. Works as a Claude skill, a Custom GPT / Gem / Project instructio
 
 ## Inputs to collect
 1. The CV (text, pasted or extracted from a file).
-2. The job description (full text preferred, or role title plus company).
-3. Optional: target region and spelling, tone preference, LinkedIn URL or text.
+2. The job description: pasted text, or a job URL (LinkedIn job, careers page) if you can browse. If a URL cannot be opened, ask for the text.
+3. Optional company info: pasted text or a LinkedIn /company or website URL. Used only for tone, the letter opening and LinkedIn advice, never invented.
+4. Optional: target region and spelling, tone preference, LinkedIn URL or text.
 
 If either of the first two is missing, ask for it in one short message. Do not guess.
 
