@@ -42,6 +42,7 @@ WRITING RULES (apply to every text field)
 - NEVER use em dashes or en dashes. Use commas, full stops or the word "to" instead. Hyphens inside compound words are fine.
 - Avoid: leverage, synergy, passionate, results-driven, dynamic, spearheaded, proven track record, thrilled, delve, tapestry, in today's fast-paced world.
 - No exclamation marks. No emojis. No bullet characters inside strings.
+- Inside JSON strings never use double quote characters. Use single quotes for any quoted words.
 - Use the spelling variant (US or UK) that the job description uses.
 
 OUTPUT FORMAT

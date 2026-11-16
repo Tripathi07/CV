@@ -203,6 +203,7 @@ WRITING RULES (apply to every text field)
 - NEVER use em dashes or en dashes. Use commas, full stops or the word "to" instead. Hyphens inside compound words are fine.
 - Avoid: leverage, synergy, passionate, results-driven, dynamic, spearheaded, proven track record, thrilled, delve, tapestry, in today's fast-paced world.
 - No exclamation marks. No emojis. No bullet characters inside strings.
+- Inside JSON strings never use double quote characters. Use single quotes for any quoted words.
 - Use the spelling variant (US or UK) that the job description uses.
 
 OUTPUT FORMAT
@@ -347,7 +348,50 @@ $("#runApi").onclick=async()=>{
 };
 
 /* ---- parse + render ---- */
-function parseJson(t){t=t.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"");const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a<0||b<0)throw new Error("No JSON found");return JSON.parse(t.slice(a,b+1))}
+function repairJson(src){
+  let o="",i=0,n=src.length,inStr=false,isKey=false;const stack=[];
+  const nextNon=j=>{while(j<n&&/\s/.test(src[j]))j++;return j};
+  while(i<n){
+    const c=src[i];
+    if(inStr){
+      if(c==="\\"){const d=src[i+1];if(d!==undefined&&/["\\\/bfnrtu]/.test(d)){o+=c+d;i+=2}else{o+="\\\\";i++}continue}
+      if(c==='"'){
+        const j=nextNon(i+1),nx=src[j];let close=false;
+        if(j>=n||nx===":"||nx==="}"||nx==="]")close=true;
+        else if(nx===","){const k=nextNon(j+1),a=src[k];close=k>=n||/["{\[\-\d tfn}\]]/.test(a)||a==="t"||a==="f"||a==="n"}
+        else if(nx==='"'||nx==="{"||nx==="["){close=/\n/.test(src.slice(i+1,j))}
+        if(close){o+='"';inStr=false;
+          const k=nextNon(i+1),a=src[k];
+          if(!isKey&&(a==='"'||a==="{"||a==="["))o+=",";
+          i++;continue}
+        o+='\\"';i++;continue}
+      if(c==="\n"){o+="\\n";i++;continue}
+      if(c==="\r"){i++;continue}
+      if(c==="\t"){o+="\\t";i++;continue}
+      if(c==="\u201c"||c==="\u201d"){o+='\\"';i++;continue}
+      o+=c;i++;continue}
+    if(c==='"'){inStr=true;const top=stack[stack.length-1];
+      // key if inside object and previous significant output char is { or ,
+      const prev=o.replace(/\s+$/,"").slice(-1);isKey=top==="{"&&(prev==="{"||prev===",");o+=c;i++;continue}
+    if(c==="/"&&src[i+1]==="/"){while(i<n&&src[i]!=="\n")i++;continue}
+    if(c==="{"||c==="["){stack.push(c);o+=c;i++;continue}
+    if(c==="}"||c==="]"){o=o.replace(/,\s*$/,"");stack.pop();o+=c;i++;
+      const k=nextNon(i),a=src[k];if(a==='"'||a==="{"||a==="[")o+=",";continue}
+    if(c==="\u201c"||c==="\u201d"){o+='"';i++;continue}
+    o+=c;i++}
+  if(inStr)o+='"';
+  o=o.replace(/,\s*$/,"");
+  while(stack.length){o+=stack.pop()==="{"?"}":"]"}
+  return o}
+function parseJson(t){
+  t=t.trim().replace(/^```(?:json)?/i,"").replace(/```\s*$/,"");
+  const a=t.indexOf("{");if(a<0)throw new Error("No JSON found in the reply");
+  const b=t.lastIndexOf("}");let body=t.slice(a,b>a?b+1:undefined);
+  try{return JSON.parse(body)}catch(e1){
+    try{return JSON.parse(repairJson(body))}catch(e2){
+      const m=String(e1.message).match(/position (\d+)/);const p=m?+m[1]:0;
+      throw new Error(e1.message+(m?' near: "'+body.slice(Math.max(0,p-40),p+40).replace(/\s+/g," ")+'"':"")+". Auto-repair failed. Ask the LLM: Return the same answer as strictly valid JSON only.")}}
+}
 function load(t){
   try{DATA=deepClean(parseJson(t));render();$("#jsonMsg").textContent="Loaded.";go("t4")}
   catch(e){$("#jsonMsg").textContent="Could not read JSON: "+e.message}
