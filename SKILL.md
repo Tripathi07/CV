@@ -27,7 +27,7 @@ If either of the first two is missing, ask for it in one short message. Do not g
 2. **Map evidence.** Each requirement becomes strong, partial or missing with the CV line that proves it.
 3. **Tailor the CV.** Role-specific summary (3 to 4 lines), skills grouped and ordered by relevance using the job's wording where true, experience bullets reordered and tightened, numbers kept as they are. Target two pages.
 4. **Highlight key expertise.** 4 to 6 statements, each tied to a CV fact.
-5. **Close gaps.** For each partial or missing must-have: severity, then 2 to 4 honest options (reframe adjacent experience, small project, course or certification with time estimate, how to address it in the letter or interview).
+5. **Close gaps.** For each partial or missing must-have give status and severity, then three layers: (a) the closest real evidence in the CV, (b) 1 to 3 ready-to-paste bullets reworded from that evidence in the role's language, also woven into the tailored CV, (c) 2 to 3 templates with [square bracket] placeholders the user fills only if true, never filled by you. Finish with 2 to 4 honest actions (adjacent experience, small project, course with time estimate, how to address it in the letter or interview).
 6. **LinkedIn.** Headline (max 220 chars), About (max 2000 chars, first person), skills to add or pin, experience rewrites, featured items.
 7. **Cover letter.** 250 to 350 words. Specific opening, two or three real achievements, one gap addressed openly, relaxed close. Follow the writing rules above.
 8. **Digital CV.** Output the structured JSON (schema in `master-prompt.md`). The CVForge web page turns that JSON into a shareable link, print-ready PDF and downloadable HTML.

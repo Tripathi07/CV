@@ -31,9 +31,14 @@ Work in this order, silently, then output only the JSON described below.
    - Summary: 3 to 4 lines, role specific, first person implied (no "I"), no cliches.
    - Skills: group them, put the ones the role asks for first, use the job description's wording where the candidate truly has the skill.
    - Experience: keep every real role. Reorder bullets by relevance. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. Max 5 bullets for recent roles, 3 for older ones.
+   - Where a gap can be covered by real CV evidence, weave the reframed wording into the summary or the relevant experience bullets.
    - Keep it to what fits two pages.
 4. Highlights: 4 to 6 short statements naming the candidate's strongest expertise that matches the role, each tied to a CV fact.
-5. Gaps: for each missing or partial must-have, give a severity (high, medium, low) and 2 to 4 honest ways to cater to it, for example: adjacent experience to reframe, a quick project to build, a certification or course with a realistic time estimate, a way to address it in the cover letter or interview. Never suggest lying or claiming skills the candidate lacks.
+5. Gaps: for each missing or partial must-have, give a status, a severity (high, medium, low) and work through three layers in this order:
+   a) evidenceInCv: quote or paraphrase the closest real evidence in the CV (empty if none).
+   b) reframedWording: 1 to 3 ready-to-paste CV bullets that express that real evidence in the language the role uses (for example scope, ownership, stakeholders, revenue, KPIs, team leadership). Use only facts and numbers already in the CV. Also weave the same wording into the tailored summary or experience bullets. Leave empty if the CV has no honest evidence.
+   c) addIfTrue: 2 to 3 bullet templates the candidate can use only if it is true for them. Put every fact the candidate must supply in [square brackets], for example "Owned a [team size] person team and a [budget amount] budget for [programme]". Never fill the brackets yourself.
+   Then howToCater: 2 to 4 honest actions to close the gap, for example adjacent experience to mention in interview, a small project, a course or certification with a realistic time estimate, or how to address it in the cover letter. Never suggest lying or claiming skills the candidate lacks.
 6. LinkedIn: suggest a headline (max 220 chars), an About section (max 2000 chars, human, first person), skills to add or pin, experience entries to tweak (with the replacement text), and featured items worth adding.
 7. Cover letter: 250 to 350 words, addressed to the hiring team (use a name only if the job description gives one). Open with something specific to the company or role, not "I am writing to apply". Pick two or three real achievements that answer the role's top needs. Address one gap openly and positively if there is one. Close with a clear, relaxed next step.
 
@@ -58,7 +63,7 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
   "certifications": [ "" ],
   "projects": [ { "name": "", "description": "" } ],
   "highlights": [ "" ],
-  "gaps": [ { "requirement": "", "status": "partial|missing", "severity": "high|medium|low", "howToCater": [ "" ] } ],
+  "gaps": [ { "requirement": "", "status": "partial|missing", "severity": "high|medium|low", "evidenceInCv": "", "reframedWording": [ "" ], "addIfTrue": [ "" ], "howToCater": [ "" ] } ],
   "linkedin": { "headline": "", "about": "", "skillsToAdd": [ "" ], "experienceTweaks": [ { "role": "", "suggestion": "" } ], "featured": [ "" ] },
   "coverLetter": ""
 }
