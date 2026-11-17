@@ -60,7 +60,7 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share &middot; v1.9</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.11</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
@@ -101,7 +101,7 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
         <div class="note">Your About section and experience are read from this link and cross-checked against the CV, so nothing real is lost and conflicts are flagged. LinkedIn often blocks automatic reading. If that happens, options appear below.</div>
         <div id="liStatus" class="status" aria-live="polite"></div>
         <div id="liFallback" class="hidden">
-          <label for="liFile">Link blocked? Upload your LinkedIn PDF (profile, More, Save to PDF)</label>
+          <ol class="muted" style="margin:6px 0 6px 18px;padding:0"><li>Open your LinkedIn profile</li><li>Click Resources (or More), then Save to PDF</li><li>Upload the downloaded file below</li></ol><label for="liFile">LinkedIn PDF</label>
           <input type="file" id="liFile" accept=".pdf,.docx,.txt,.md">
           <div class="row"><button class="btn ghost" id="liSkip" type="button">Continue with the link only</button><span class="muted">Your LLM will try to open the link itself.</span></div>
         </div>
@@ -307,7 +307,7 @@ function fetchLi(){
   if(liFetching&&u===liLast)return liFetching;
   liLast=u;liSkipped=false;$("#liIn").value="";setStatus("#liStatus",null,"Reading your profile...");
   liFetching=readUrl(u).then(t=>{$("#liIn").value=t;liReady("LinkedIn profile read, "+wc(t)+" words");return true})
-   .catch(e=>{setStatus("#liStatus",false,"Could not read the profile ("+e.message+"). LinkedIn blocks automatic reading.");$("#liFallback").classList.remove("hidden");return false})
+   .catch(e=>{const blocked=/40[13]|429|999|login|too little/i.test(e.message);setStatus("#liStatus",false,blocked?"LinkedIn does not let outside tools read profile pages ("+e.message+"). Use LinkedIn's own export below, it takes about 20 seconds.":"Could not read the profile ("+e.message+"). Use the export below.");const fb=$("#liFallback");fb.classList.remove("hidden");fb.scrollIntoView&&fb.scrollIntoView({block:"nearest",behavior:"smooth"});return false})
    .finally(()=>{liFetching=null});
   return liFetching}
 let liTmr;
@@ -392,7 +392,7 @@ $("#runApi").onclick=async()=>{
   try{
     let text;const prompt=buildPrompt();
     if($("#prov").value==="anthropic"){
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:$("#model").value,max_tokens:8000,messages:[{role:"user",content:prompt}]})});
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:$("#model").value,max_tokens:16000,messages:[{role:"user",content:prompt}]})});
       const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||r.status);text=j.content.map(c=>c.text||"").join("");
     }else{
       const r=await fetch($("#base").value.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+key},body:JSON.stringify({model:$("#model").value,messages:[{role:"user",content:prompt}]})});
@@ -439,15 +439,43 @@ function repairJson(src){
   o=o.replace(/,\s*$/,"");
   while(stack.length){o+=stack.pop()==="{"?"}":"]"}
   return o}
+const K=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,"");
+const ALIAS={experience:["experience","workexperience","experiences","employment","employmenthistory","professionalexperience","careerhistory","workhistory"],summary:["summary","profile","professionalsummary","about","objective","profilesummary"],skills:["skills","keyskills","coreskills","technicalskills","skillsets"],education:["education","academics","qualifications"],certifications:["certifications","certificates","certs"],projects:["projects"],candidate:["candidate","personal","personalinfo","contact","header","basics","person"],highlights:["highlights","keyexpertise","keystrengths"],gaps:["gaps","gapanalysis"],linkedin:["linkedin","linkedinsuggestions"],coverLetter:["coverletter"],match:["match","matchsummary"],audit:["audit"],crosscheck:["crosscheck","linkedincrosscheck"]};
+function remap(o){if(!o||typeof o!=="object"||Array.isArray(o))return o;const r={};for(const k in o){let t=k;for(const c in ALIAS)if(ALIAS[c].includes(K(k))){t=c;break}if(!(t in r))r[t]=o[k]}return r}
+const asArr=v=>Array.isArray(v)?v:(v==null||v===""?[]:[v]);
+function normExp(j){if(typeof j==="string")return{role:j,company:"",period:"",location:"",bullets:[]};
+  const g=(...ks)=>{for(const k of ks)for(const q in j)if(K(q)===K(k)&&j[q]!=null&&j[q]!=="")return j[q];return""};
+  let b=g("bullets","achievements","responsibilities","highlights","points","description","details");if(typeof b==="string")b=b.split(/\n+/).map(x=>x.replace(/^[\s\-•*]+/,"").trim()).filter(Boolean);
+  const st=g("startDate","start"),en=g("endDate","end");
+  return{role:g("role","title","position","jobTitle"),company:g("company","employer","organization","organisation"),period:g("period","dates","duration","years")||(st?st+" to "+(en||"Present"):""),location:g("location"),bullets:asArr(b).map(x=>typeof x==="string"?x:JSON.stringify(x))}}
+function normalizeCv(o){
+  if(Array.isArray(o))o=o.find(x=>x&&typeof x==="object")||null;if(!o||typeof o!=="object")return null;
+  const find=(x,dep)=>{if(!x||typeof x!=="object"||dep>4)return null;if(Array.isArray(x)){for(const y of x){const f=find(y,dep+1);if(f)return f}return null}
+    const r=remap(x);if(r.experience||r.summary||r.candidate)return r;for(const k in x){const f=find(x[k],dep+1);if(f)return f}return null};
+  const outer=remap(o);let cv=(outer.experience||outer.summary||outer.candidate)?outer:null;
+  if(!cv){const n=find(o,0);if(!n)return null;cv=Object.assign({},outer,n)}
+  if(cv.candidate&&typeof cv.candidate==="string")cv.candidate={name:cv.candidate};
+  cv.experience=asArr(cv.experience).map(normExp);
+  if(cv.skills&&!Array.isArray(cv.skills)&&typeof cv.skills==="object")cv.skills=Object.entries(cv.skills).map(([g,i])=>({group:g,items:asArr(i)}));
+  if(Array.isArray(cv.skills)&&cv.skills.length&&typeof cv.skills[0]==="string")cv.skills=[{group:"Skills",items:cv.skills}];
+  cv.skills=asArr(cv.skills);
+  cv.education=asArr(cv.education).map(e=>typeof e==="string"?{title:e,org:"",period:""}:e);
+  cv.certifications=asArr(cv.certifications).map(c=>typeof c==="string"?c:(c&&(c.name||c.title))||JSON.stringify(c));
+  cv.projects=asArr(cv.projects).map(p=>typeof p==="string"?{name:p,description:""}:p);
+  if(!cv.experience.length&&!cv.summary)return null;
+  return cv}
+function parseBody(body){try{return JSON.parse(body)}catch(e1){try{return JSON.parse(repairJson(body))}catch(e2){
+  const m=String(e1.message).match(/position (\d+)/);const p=m?+m[1]:0;
+  throw new Error(e1.message+(m?' near: "'+body.slice(Math.max(0,p-40),p+40).replace(/\s+/g," ")+'"':"")+". Auto-repair failed. Ask the LLM: Return the same answer as strictly valid JSON only.")}}}
 function parseJson(t){
   t=t.trim().replace(/^```(?:json)?/i,"").replace(/```\s*$/,"");
-  const a=t.indexOf("{");if(a<0)throw new Error("No JSON found in the reply");
-  const b=t.lastIndexOf("}");let body=t.slice(a,b>a?b+1:undefined);
-  try{return JSON.parse(body)}catch(e1){
-    try{return JSON.parse(repairJson(body))}catch(e2){
-      const m=String(e1.message).match(/position (\d+)/);const p=m?+m[1]:0;
-      throw new Error(e1.message+(m?' near: "'+body.slice(Math.max(0,p-40),p+40).replace(/\s+/g," ")+'"':"")+". Auto-repair failed. Ask the LLM: Return the same answer as strictly valid JSON only.")}}
-}
+  const b=t.lastIndexOf("}");if(b<0)throw new Error("No JSON found in the reply");
+  const starts=[];const re=/\{\s*"(?:match|candidate|summary|experience)"/gi;let m;while((m=re.exec(t)))starts.push(m.index);
+  const a=t.indexOf("{");if(!starts.includes(a))starts.push(a);
+  let lastErr=null,keys=[];
+  for(const st of starts.sort((x,y)=>x-y)){try{const o=parseBody(t.slice(st,b+1));const cv=normalizeCv(o);if(cv)return cv;keys=Object.keys(o||{})}catch(e){lastErr=e}}
+  if(keys.length)throw new Error("The reply is valid JSON but has no CV content (found: "+keys.slice(0,8).join(", ")+"). Ask the LLM to return the complete JSON in the exact format, starting with { and ending with }.");
+  throw lastErr||new Error("No CV found in the reply")}
 function load(t){
   try{DATA=deepClean(parseJson(t));render();$("#jsonMsg").textContent="Loaded.";go("t4")}
   catch(e){$("#jsonMsg").textContent="Could not read JSON: "+e.message}
@@ -458,15 +486,17 @@ const phl=t=>esc(t).replace(/\[([^\]]+)\]/g,"<mark>[$1]</mark>");
 document.addEventListener("click",async e=>{const li=e.target.closest("ul.cp li");if(!li)return;try{await navigator.clipboard.writeText(li.textContent);toast("Copied")}catch(_){}});
 
 function cvWords(d){let n=0;const walk=(v,k)=>{if(typeof v==="string"){if(!/^(url|email|phone)$/.test(k||""))n+=(v.match(/\S+/g)||[]).length}else if(Array.isArray(v))v.forEach(x=>walk(x,k));else if(v&&typeof v==="object")for(const q in v)walk(v[q],q)};walk(shareable(d));return n}
-function auditHtml(d){const a=d.audit||{};const rc=+a.rolesInCv||0,dr=(a.droppedItems||[]).filter(Boolean);
+function auditHtml(d){const hasA=!!d.audit,a=d.audit||{};const rc=+a.rolesInCv||0,dr=(a.droppedItems||[]).filter(Boolean);
   const roles=(d.experience||[]).length,ow=cvWords(d),iw=wc($("#cvIn").value||""),pct=iw?Math.round(ow/iw*100):0,pg=Math.max(1,Math.ceil(ow/500));
-  const rolesBad=rc&&roles<rc,short=iw>=150&&pct<80,bad=rolesBad||short||dr.length;
+  const rolesBad=rc&&roles<rc,short=iw>=150&&pct<80,noRoles=!roles,bad=rolesBad||short||dr.length||noRoles;
   return `<div class="card noprint" style="border-color:${bad?"var(--bad)":"var(--line)"}"><b>Completeness check</b><br>`+
-   `Roles: ${esc(rc||"?")} in CV, ${roles} in tailored CV. Bullets: ${esc(a.bulletsInCv||"?")} to ${esc(a.bulletsInOutput||"?")}.<br>`+
+   (hasA?`Roles: ${esc(rc||"?")} in CV, ${roles} in tailored CV. Bullets: ${esc(a.bulletsInCv||"?")} to ${esc(a.bulletsInOutput||"?")}.<br>`:`Roles in tailored CV: ${roles}.<br>`)+
    (iw?`Length: original ${iw} words, tailored ${ow} words (${pct}%), about ${pg} page${pg>1?"s":""}.`:`Tailored CV: ${ow} words, about ${pg} page${pg>1?"s":""}.`)+
+   (noRoles?` <span style="color:var(--bad)">No experience section came back.</span>`:"")+
    (rolesBad?` <span style="color:var(--bad)">Roles are missing.</span>`:"")+
    (short?` <span style="color:var(--bad)">The tailored CV is much shorter than your original. Ask the LLM: Expand it to match the original length and keep every bullet in full.</span>`:"")+
-   (!bad?` <span style="color:var(--ok)">Looks complete.</span>`:"")+
+   (!hasA?` <span style="color:var(--mute)">The reply has no audit block, so it may have been cut off. If anything is missing, ask the LLM to continue or re-run it.</span>`:"")+
+   (!bad&&hasA?` <span style="color:var(--ok)">Looks complete.</span>`:"")+
    (dr.length?`<ul>${dr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+`</div>`}
 function crossHtml(d){const c=d.crosscheck;if(!c)return"";const L=k=>(c[k]||[]).filter(Boolean);const cf=(c.conflicts||[]).filter(x=>x&&x.item);
   if(!L("inLinkedInNotInCv").length&&!L("inCvNotInLinkedIn").length&&!cf.length)return`<div class="card"><h2>LinkedIn cross-check</h2><p class="muted">No differences found, or no LinkedIn profile was provided.</p></div>`;
