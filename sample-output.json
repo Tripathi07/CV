@@ -97,5 +97,28 @@
       "A short write up of the migration approach"
     ]
   },
-  "coverLetter": "Dear Hiring Team,\n\nYour platform team is moving from lift and shift to something more deliberate, and that is the stage I enjoy most.\n\nBest regards,\nAlex"
+  "coverLetter": "Dear Hiring Team,\n\nYour platform team is moving from lift and shift to something more deliberate, and that is the stage I enjoy most.\n\nBest regards,\nAlex",
+  "audit": {
+    "rolesInCv": 1,
+    "rolesInOutput": 1,
+    "bulletsInCv": 2,
+    "bulletsInOutput": 2,
+    "droppedItems": []
+  },
+  "crosscheck": {
+    "inLinkedInNotInCv": [
+      "Speaker at an internal cloud summit (LinkedIn About)"
+    ],
+    "inCvNotInLinkedIn": [
+      "AWS Solutions Architect Associate certification"
+    ],
+    "conflicts": [
+      {
+        "item": "Delivery Lead start date",
+        "cv": "2019",
+        "linkedin": "March 2020",
+        "suggestion": "Confirm the correct date and align both."
+      }
+    ]
+  }
 }

@@ -60,7 +60,7 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share &middot; v1.6</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.7</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
@@ -110,6 +110,11 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
         <details style="margin-top:8px"><summary class="muted">Company notes (optional)</summary>
           <textarea id="coIn" style="min-height:90px" placeholder="About the company, mission, culture. Filled automatically when the link is a company page."></textarea></details></div>
     </div>
+    <div class="card"><h2>LinkedIn profile <span class="muted">(optional, recommended)</span></h2>
+      <p class="muted" style="margin:0 0 6px">Used to cross-check your About section and experience against the CV, so nothing real is lost and conflicts are flagged. LinkedIn blocks automatic reading of profiles, so either upload the PDF (your profile, More, Save to PDF) or paste the About and Experience text.</p>
+      <label for="liFile">Upload LinkedIn PDF (or .txt)</label><input type="file" id="liFile" accept=".pdf,.docx,.txt,.md">
+      <label for="liIn">Or paste About and Experience text</label><textarea id="liIn" style="min-height:140px" placeholder="Paste your LinkedIn About and Experience sections here"></textarea>
+      <div id="liStatus" class="status" aria-live="polite"></div></div>
     <div class="row"><button class="btn" id="goMatch" type="button">Analyse match</button><span id="goMsg" class="muted">Nothing leaves your browser unless you fetch a link or use the API option in step 3.</span></div>
   </div>
 
@@ -184,26 +189,33 @@ INPUTS
 {{CO}}
 </COMPANY_CONTEXT>
 
+<LINKEDIN_PROFILE>
+{{LI}}
+</LINKEDIN_PROFILE>
+
 TASK
 Work in this order, silently, then output only the JSON described below.
 
 0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
 1. Parse the job description. List must-have requirements, nice-to-haves, seniority signals, domain, tools, soft skills and the exact keywords an ATS would scan for.
 2. Map every requirement to evidence in the CV. Mark each as strong, partial or missing.
+2b. If LINKEDIN_PROFILE has content, cross-check it against the CV, About section and every experience entry. List real roles, achievements, skills, certifications or dates that appear on LinkedIn but not in the CV, and the reverse. Flag conflicts in titles, employers or dates. Treat both sources as the candidate's own truth, merge the union into the tailored CV, and never invent anything that is in neither. If it is empty, skip this step and leave the crosscheck lists empty.
 3. Rewrite the CV for this role:
    - Summary: 3 to 4 lines, role specific, first person implied (no "I"), no cliches.
    - Skills: group them, put the ones the role asks for first, use the job description's wording where the candidate truly has the skill.
-   - Experience: keep every real role. Reorder bullets by relevance. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. Max 5 bullets for recent roles, 3 for older ones.
+   - Experience: output EVERY role in the CV, newest first, with the same employer, title and dates. Never drop a role, an employer or an achievement. Keep every bullet: tighten the wording and merge only true duplicates. Put the most relevant bullets first inside each role. Older roles may be worded more briefly but must stay. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. If LinkedIn holds extra real roles or points that the CV lacks, add them.
    - Where a gap can be covered by real CV evidence, weave the reframed wording into the summary or the relevant experience bullets.
-   - Keep it to what fits two pages.
+   - Never cut roles or bullets to fit a page limit. Condense wording instead.
 4. Highlights: 4 to 6 short statements naming the candidate's strongest expertise that matches the role, each tied to a CV fact.
 5. Gaps: for each missing or partial must-have, give a status, a severity (high, medium, low) and work through three layers in this order:
    a) evidenceInCv: quote or paraphrase the closest real evidence in the CV (empty if none).
    b) reframedWording: 1 to 3 ready-to-paste CV bullets that express that real evidence in the language the role uses (for example scope, ownership, stakeholders, revenue, KPIs, team leadership). Use only facts and numbers already in the CV. Also weave the same wording into the tailored summary or experience bullets. Leave empty if the CV has no honest evidence.
    c) addIfTrue: 2 to 3 bullet templates the candidate can use only if it is true for them. Put every fact the candidate must supply in [square brackets], for example "Owned a [team size] person team and a [budget amount] budget for [programme]". Never fill the brackets yourself.
    Then howToCater: 2 to 4 honest actions to close the gap, for example adjacent experience to mention in interview, a small project, a course or certification with a realistic time estimate, or how to address it in the cover letter. Never suggest lying or claiming skills the candidate lacks.
-6. LinkedIn: suggest a headline (max 220 chars), an About section (max 2000 chars, human, first person), skills to add or pin, experience entries to tweak (with the replacement text), and featured items worth adding.
+6. LinkedIn: build on the existing LinkedIn About and experience text where it is good instead of discarding it. Suggest a headline (max 220 chars), an About section (max 2000 chars, human, first person), skills to add or pin, experience entries to tweak (with the replacement text), and featured items worth adding.
 7. Cover letter: 250 to 350 words, addressed to the hiring team (use a name only if the job description gives one). Open with something specific to the company or role, not "I am writing to apply". Pick two or three real achievements that answer the role's top needs. Address one gap openly and positively if there is one. Close with a clear, relaxed next step.
+
+Before answering, count the roles and bullets in the CV and in your output. They must match (rolesInOutput equal to rolesInCv, bulletsInOutput at least bulletsInCv minus merged duplicates). List anything dropped or merged in audit.droppedItems.
 
 WRITING RULES (apply to every text field)
 - Write like a thoughtful person, not a template. Mix sentence lengths. Use plain words and contractions where natural.
@@ -228,13 +240,15 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
   "highlights": [ "" ],
   "gaps": [ { "requirement": "", "status": "partial|missing", "severity": "high|medium|low", "evidenceInCv": "", "reframedWording": [ "" ], "addIfTrue": [ "" ], "howToCater": [ "" ] } ],
   "linkedin": { "headline": "", "about": "", "skillsToAdd": [ "" ], "experienceTweaks": [ { "role": "", "suggestion": "" } ], "featured": [ "" ] },
+  "audit": { "rolesInCv": 0, "rolesInOutput": 0, "bulletsInCv": 0, "bulletsInOutput": 0, "droppedItems": [ "" ] },
+  "crosscheck": { "inLinkedInNotInCv": [ "" ], "inCvNotInLinkedIn": [ "" ], "conflicts": [ { "item": "", "cv": "", "linkedin": "", "suggestion": "" } ] },
   "coverLetter": ""
 }
 
 Use \\n\\n between cover letter paragraphs. Leave a field as an empty string or empty array if the CV has nothing for it.`;
 const jdText=()=>$("#jdIn").value.trim()||($("#jobUrl").value.trim()?"URL: "+$("#jobUrl").value.trim():"");
 const coText=()=>{const t=$("#coIn").value.trim(),u=$("#jobUrl").value.trim();return t||(/linkedin\.com\/company\//i.test(u)?"URL: "+u:"(none)")};
-const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CO}}",()=>coText());
+const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CO}}",()=>coText()).replace("{{LI}}",()=>$("#liIn").value.trim()||"(none provided)");
 
 /* ---- input handling: status, upload, link auto-fetch ---- */
 const wc=t=>(t.trim().match(/\S+/g)||[]).length;
@@ -271,6 +285,14 @@ $("#cvFile").onchange=async e=>{
   try{const t=await fileToText(f);if(wc(t)<30)throw new Error("No readable text found. Scanned PDFs need OCR, so paste the text instead");
     $("#cvIn").value=t;cvName=f.name;updCv();maybeAuto()}
   catch(err){setStatus("#cvStatus",false,"Could not read file: "+err.message)}};
+
+
+/* ---- LinkedIn input ---- */
+function updLi(name){const n=wc($("#liIn").value);if(!n)setStatus("#liStatus",null,"");else setStatus("#liStatus",true,"LinkedIn profile added"+(name?" ("+name+")":"")+", "+n+" words")}
+$("#liIn").addEventListener("input",()=>updLi());
+$("#liFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;setStatus("#liStatus",null,"Reading "+f.name+"...");
+  try{const t=await fileToText(f);if(wc(t)<20)throw new Error("no readable text found");$("#liIn").value=t;updLi(f.name)}
+  catch(err){setStatus("#liStatus",false,"Could not read file: "+err.message)}};
 
 async function readUrl(u){
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),25000);
@@ -407,6 +429,16 @@ $("#loadJson").onclick=()=>load($("#jsonIn").value);
 
 const phl=t=>esc(t).replace(/\[([^\]]+)\]/g,"<mark>[$1]</mark>");
 document.addEventListener("click",async e=>{const li=e.target.closest("ul.cp li");if(!li)return;try{await navigator.clipboard.writeText(li.textContent);toast("Copied")}catch(_){}});
+
+function auditHtml(d){const a=d.audit;if(!a)return"";const rc=+a.rolesInCv||0,ro=+a.rolesInOutput||0,dr=(a.droppedItems||[]).filter(Boolean);
+  const bad=ro<rc||dr.length;const roles=(d.experience||[]).length;
+  return `<div class="card noprint" style="border-color:${bad?"var(--bad)":"var(--line)"}"><b>Completeness check:</b> CV roles ${esc(rc)}, roles in tailored CV ${esc(roles)}; bullets ${esc(a.bulletsInCv)} to ${esc(a.bulletsInOutput)}.`+(bad?` <span style="color:var(--bad)">Something may have been dropped. Re-run and ask the LLM to keep every role and bullet.</span>`:` <span style="color:var(--ok)">All roles kept.</span>`)+(dr.length?`<ul>${dr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+`</div>`}
+function crossHtml(d){const c=d.crosscheck;if(!c)return"";const L=k=>(c[k]||[]).filter(Boolean);const cf=(c.conflicts||[]).filter(x=>x&&x.item);
+  if(!L("inLinkedInNotInCv").length&&!L("inCvNotInLinkedIn").length&&!cf.length)return`<div class="card"><h2>LinkedIn cross-check</h2><p class="muted">No differences found, or no LinkedIn profile was provided.</p></div>`;
+  return `<div class="card"><h2>LinkedIn cross-check</h2>`+
+   (L("inLinkedInNotInCv").length?`<h3>On LinkedIn but not in your CV (added to the tailored CV)</h3><ul>${L("inLinkedInNotInCv").map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
+   (L("inCvNotInLinkedIn").length?`<h3>In your CV but not on LinkedIn (consider adding there)</h3><ul>${L("inCvNotInLinkedIn").map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+
+   (cf.length?`<h3>Conflicts to resolve</h3>${cf.map(x=>`<div class="gap"><b>${esc(x.item)}</b><br><span class="muted">CV: ${esc(x.cv)}<br>LinkedIn: ${esc(x.linkedin)}</span><br>${esc(x.suggestion)}</div>`).join("")}`:"")+`</div>`}
 function cvHtml(d){
   const c=d.candidate||{};
   const contact=[c.location,c.email&&`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`,c.phone].filter(Boolean).map((x,i)=>i===0?esc(x):x)
@@ -435,6 +467,7 @@ function render(){
    ((l.skillsToAdd||[]).length?`<h3>Skills to add or pin</h3>${l.skillsToAdd.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}`:"")+
    ((l.experienceTweaks||[]).length?`<h3>Experience edits</h3>${l.experienceTweaks.map(t=>`<p><b>${esc(t.role)}</b><br>${esc(t.suggestion)}</p>`).join("")}`:"")+
    ((l.featured||[]).length?`<h3>Featured section ideas</h3><ul>${l.featured.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>`:"")+`</div>`;
+  $("#cvOut").insertAdjacentHTML("afterbegin",auditHtml(d));$("#gapOut").insertAdjacentHTML("beforeend",crossHtml(d));
   $("#clOut").value=d.coverLetter||"";cl();
 }
 function cl(){const w=($("#clOut").value.trim().match(/\S+/g)||[]).length;$("#clInfo").textContent=w+" words"}
