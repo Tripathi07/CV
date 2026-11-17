@@ -60,7 +60,7 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share &middot; v1.8</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.9</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
@@ -86,35 +86,41 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
     <div class="grid2">
       <div class="card"><h2>Your CV</h2>
         <div class="row" style="margin-top:0">
-          <label class="rad"><input type="radio" name="cvsrc" value="text" checked> Paste text</label>
-          <label class="rad"><input type="radio" name="cvsrc" value="file"> Upload file</label>
+          <label class="rad"><input type="radio" name="cvsrc" value="file" checked> Upload file</label>
+          <label class="rad"><input type="radio" name="cvsrc" value="text"> Paste text</label>
         </div>
-        <div id="cvFileBox" class="hidden">
+        <div id="cvFileBox">
           <label for="cvFile">PDF, Word (.docx), .txt or .md</label>
           <input type="file" id="cvFile" accept=".pdf,.docx,.txt,.md,.json">
         </div>
-        <label for="cvIn">CV content</label><textarea id="cvIn" placeholder="Paste CV text here, or upload a file above"></textarea>
+        <label for="cvIn">CV content</label><textarea id="cvIn" style="min-height:200px" placeholder="Your CV text appears here after upload, or paste it"></textarea>
         <div id="cvStatus" class="status" aria-live="polite"></div></div>
-      <div class="card"><h2>Target role</h2>
-        <div class="row" style="margin-top:0">
-          <label class="rad"><input type="radio" name="src" value="text" checked> Paste description</label>
-          <label class="rad"><input type="radio" name="src" value="url"> Job or company link</label>
+      <div class="card"><h2>Your LinkedIn profile</h2>
+        <label for="liUrl">Profile link (required)</label>
+        <input id="liUrl" type="url" placeholder="https://www.linkedin.com/in/your-name">
+        <div class="note">Your About section and experience are read from this link and cross-checked against the CV, so nothing real is lost and conflicts are flagged. LinkedIn often blocks automatic reading. If that happens, options appear below.</div>
+        <div id="liStatus" class="status" aria-live="polite"></div>
+        <div id="liFallback" class="hidden">
+          <label for="liFile">Link blocked? Upload your LinkedIn PDF (profile, More, Save to PDF)</label>
+          <input type="file" id="liFile" accept=".pdf,.docx,.txt,.md">
+          <div class="row"><button class="btn ghost" id="liSkip" type="button">Continue with the link only</button><span class="muted">Your LLM will try to open the link itself.</span></div>
         </div>
-        <div id="urlBox" class="hidden">
-          <label for="jobUrl">One link: LinkedIn job, LinkedIn /company page, careers page or job board</label>
-          <input id="jobUrl" type="url" placeholder="https://www.linkedin.com/jobs/view/...">
-          <div class="note">Details load automatically when you paste the link, then the match runs. Fetching uses the free r.jina.ai reader, which receives the link. LinkedIn may block it; if so, paste the text below.</div>
-        </div>
-        <label for="jdIn">Job description</label><textarea id="jdIn" placeholder="Paste job description here, or paste a link above"></textarea>
-        <div id="jdStatus" class="status" aria-live="polite"></div>
-        <details style="margin-top:8px"><summary class="muted">Company notes (optional)</summary>
-          <textarea id="coIn" style="min-height:90px" placeholder="About the company, mission, culture. Filled automatically when the link is a company page."></textarea></details></div>
+        <textarea id="liIn" class="hidden" aria-hidden="true"></textarea></div>
     </div>
-    <div class="card"><h2>LinkedIn profile <span class="muted">(optional, recommended)</span></h2>
-      <p class="muted" style="margin:0 0 6px">Used to cross-check your About section and experience against the CV, so nothing real is lost and conflicts are flagged. LinkedIn blocks automatic reading of profiles, so either upload the PDF (your profile, More, Save to PDF) or paste the About and Experience text.</p>
-      <label for="liFile">Upload LinkedIn PDF (or .txt)</label><input type="file" id="liFile" accept=".pdf,.docx,.txt,.md">
-      <label for="liIn">Or paste About and Experience text</label><textarea id="liIn" style="min-height:140px" placeholder="Paste your LinkedIn About and Experience sections here"></textarea>
-      <div id="liStatus" class="status" aria-live="polite"></div></div>
+    <div class="card"><h2>Target role</h2>
+      <div class="row" style="margin-top:0">
+        <label class="rad"><input type="radio" name="src" value="url" checked> Job or company link</label>
+        <label class="rad"><input type="radio" name="src" value="text"> Paste description</label>
+      </div>
+      <div id="urlBox">
+        <label for="jobUrl">One link: LinkedIn job, LinkedIn /company page, careers page or job board</label>
+        <input id="jobUrl" type="url" placeholder="https://www.linkedin.com/jobs/view/...">
+        <div class="note">Details load automatically when you paste the link, then the match runs once your CV and LinkedIn profile are ready. Fetching uses the free r.jina.ai reader, which receives the link. LinkedIn may block it; if so, switch to Paste description.</div>
+      </div>
+      <label for="jdIn">Job description</label><textarea id="jdIn" style="min-height:200px" placeholder="Fetched job text appears here, or paste it"></textarea>
+      <div id="jdStatus" class="status" aria-live="polite"></div>
+      <details style="margin-top:8px"><summary class="muted">Company notes (optional)</summary>
+        <textarea id="coIn" style="min-height:90px" placeholder="About the company, mission, culture. Filled automatically when the link is a company page."></textarea></details></div>
     <div class="row"><button class="btn" id="goMatch" type="button">Analyse match</button><span id="goMsg" class="muted">Nothing leaves your browser unless you fetch a link or use the API option in step 3.</span></div>
   </div>
 
@@ -196,7 +202,7 @@ INPUTS
 TASK
 Work in this order, silently, then output only the JSON described below.
 
-0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
+0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If LINKEDIN_PROFILE holds only a URL, open it if you can, otherwise say the cross-check was skipped and continue. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
 1. Parse the job description. List must-have requirements, nice-to-haves, seniority signals, domain, tools, soft skills and the exact keywords an ATS would scan for.
 2. Map every requirement to evidence in the CV. Mark each as strong, partial or missing.
 2b. If LINKEDIN_PROFILE has content, cross-check it against the CV, About section and every experience entry. List real roles, achievements, skills, certifications or dates that appear on LinkedIn but not in the CV, and the reverse. Flag conflicts in titles, employers or dates. Treat both sources as the candidate's own truth, merge the union into the tailored CV, and never invent anything that is in neither. If it is empty, skip this step and leave the crosscheck lists empty.
@@ -248,7 +254,7 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
 Use \\n\\n between cover letter paragraphs. Leave a field as an empty string or empty array if the CV has nothing for it.`;
 const jdText=()=>$("#jdIn").value.trim()||($("#jobUrl").value.trim()?"URL: "+$("#jobUrl").value.trim():"");
 const coText=()=>{const t=$("#coIn").value.trim(),u=$("#jobUrl").value.trim();return t||(/linkedin\.com\/company\//i.test(u)?"URL: "+u:"(none)")};
-const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CVWORDS}}",()=>String(wc($("#cvIn").value)||"unknown")).replace("{{CVPAGES}}",()=>String(Math.max(1,Math.round(wc($("#cvIn").value)/500))||1)).replace("{{CO}}",()=>coText()).replace("{{LI}}",()=>$("#liIn").value.trim()||"(none provided)");
+const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CVWORDS}}",()=>String(wc($("#cvIn").value)||"unknown")).replace("{{CVPAGES}}",()=>String(Math.max(1,Math.round(wc($("#cvIn").value)/500))||1)).replace("{{CO}}",()=>coText()).replace("{{LI}}",()=>liText());
 
 /* ---- input handling: status, upload, link auto-fetch ---- */
 const wc=t=>(t.trim().match(/\S+/g)||[]).length;
@@ -257,7 +263,7 @@ let cvName="",pendingAuto=false;
 const cvOk=()=>wc($("#cvIn").value)>=30, jdOk=()=>wc($("#jdIn").value)>=30;
 function updCv(){const n=wc($("#cvIn").value);if(!n)setStatus("#cvStatus",null,"");else if(cvOk())setStatus("#cvStatus",true,"CV added"+(cvName?" ("+cvName+")":"")+", "+n+" words");else setStatus("#cvStatus",false,"That looks too short for a CV ("+n+" words)")}
 function updJd(extra){const n=wc($("#jdIn").value);if(!n)setStatus("#jdStatus",null,"");else if(jdOk())setStatus("#jdStatus",true,"Job description added, "+n+" words"+(extra||""));else setStatus("#jdStatus",false,"Too short to analyse ("+n+" words)")}
-function maybeAuto(){if(pendingAuto&&cvOk()&&jdOk()){pendingAuto=false;$("#goMsg").textContent="";if(runMatch())go("t2")}}
+function maybeAuto(){if(pendingAuto&&cvOk()&&liOk()&&jdOk()){pendingAuto=false;$("#goMsg").textContent="";if(runMatch())go("t2")}}
 $("#cvIn").addEventListener("input",()=>{cvName="";updCv();maybeAuto()});
 $("#jdIn").addEventListener("input",()=>updJd());
 document.querySelectorAll("input[name=src]").forEach(r=>r.onchange=()=>$("#urlBox").classList.toggle("hidden",document.querySelector("input[name=src]:checked").value!=="url"));
@@ -283,16 +289,35 @@ async function fileToText(f){
 $("#cvFile").onchange=async e=>{
   const f=e.target.files[0];if(!f)return;setStatus("#cvStatus",null,"Reading "+f.name+"...");
   try{const t=await fileToText(f);if(wc(t)<30)throw new Error("No readable text found. Scanned PDFs need OCR, so paste the text instead");
-    $("#cvIn").value=t;cvName=f.name;updCv();maybeAuto()}
+    $("#cvIn").value=t;cvName=f.name;updCv();pendingAuto=true;maybeAuto()}
   catch(err){setStatus("#cvStatus",false,"Could not read file: "+err.message)}};
 
 
-/* ---- LinkedIn input ---- */
-function updLi(name){const n=wc($("#liIn").value);if(!n)setStatus("#liStatus",null,"");else setStatus("#liStatus",true,"LinkedIn profile added"+(name?" ("+name+")":"")+", "+n+" words")}
-$("#liIn").addEventListener("input",()=>updLi());
+/* ---- LinkedIn profile: link first, fallbacks if blocked ---- */
+let liSkipped=false;
+const liUrlOk=()=>/^https?:\/\/([a-z]+\.)?linkedin\.com\/(in|pub)\/\S+/i.test($("#liUrl").value.trim());
+const liOk=()=>wc($("#liIn").value)>=30||(liSkipped&&liUrlOk());
+const liText=()=>$("#liIn").value.trim()||(liUrlOk()?"URL: "+$("#liUrl").value.trim():"(none provided)");
+function liReady(msg){$("#liFallback").classList.add("hidden");setStatus("#liStatus",true,msg);pendingAuto=true;maybeAuto()}
+let liFetching=null,liLast="";
+function fetchLi(){
+  const u=$("#liUrl").value.trim();
+  if(!u){setStatus("#liStatus",null,"");return Promise.resolve(false)}
+  if(!liUrlOk()){setStatus("#liStatus",false,"Use your profile link, like https://www.linkedin.com/in/your-name");return Promise.resolve(false)}
+  if(liFetching&&u===liLast)return liFetching;
+  liLast=u;liSkipped=false;$("#liIn").value="";setStatus("#liStatus",null,"Reading your profile...");
+  liFetching=readUrl(u).then(t=>{$("#liIn").value=t;liReady("LinkedIn profile read, "+wc(t)+" words");return true})
+   .catch(e=>{setStatus("#liStatus",false,"Could not read the profile ("+e.message+"). LinkedIn blocks automatic reading.");$("#liFallback").classList.remove("hidden");return false})
+   .finally(()=>{liFetching=null});
+  return liFetching}
+let liTmr;
+$("#liUrl").addEventListener("input",()=>{clearTimeout(liTmr);liTmr=setTimeout(fetchLi,700)});
+$("#liUrl").addEventListener("paste",()=>setTimeout(fetchLi,50));
+$("#liUrl").addEventListener("change",fetchLi);
 $("#liFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;setStatus("#liStatus",null,"Reading "+f.name+"...");
-  try{const t=await fileToText(f);if(wc(t)<20)throw new Error("no readable text found");$("#liIn").value=t;updLi(f.name)}
+  try{const t=await fileToText(f);if(wc(t)<20)throw new Error("no readable text found");$("#liIn").value=t;liReady("LinkedIn profile added from "+f.name+", "+wc(t)+" words")}
   catch(err){setStatus("#liStatus",false,"Could not read file: "+err.message)}};
+$("#liSkip").onclick=()=>{if(!liUrlOk()){toast("Enter your profile link first");return}liSkipped=true;liReady("Continuing with the link only. Your LLM will try to open it")};
 
 async function readUrl(u){
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),25000);
@@ -322,6 +347,7 @@ $("#jobUrl").addEventListener("input",()=>{clearTimeout(tmr);tmr=setTimeout(fetc
 $("#jobUrl").addEventListener("paste",()=>setTimeout(fetchLink,50));
 $("#jobUrl").addEventListener("change",fetchLink);
 $("#goMatch").onclick=async()=>{
+  if(!liOk()&&liUrlOk())await fetchLi();
   if(!$("#jdIn").value.trim()&&$("#jobUrl").value.trim())await fetchLink();
   if(runMatch())go("t2")};
 
@@ -341,6 +367,7 @@ function keywords(jd){
 function runMatch(){
   const cv=$("#cvIn").value.toLowerCase(),jd=$("#jdIn").value;
   if(!cv.trim()){toast("Add your CV first");return false}
+  if(!liOk()){toast("Add your LinkedIn profile link");return false}
   if(!jd.trim()){toast("Add the job description, or paste a job link");return false}
   const kws=keywords(jd),ok=kws.filter(k=>cv.includes(k)),no=kws.filter(k=>!cv.includes(k));
   const sc=kws.length?Math.round(ok.length/kws.length*100):0;
@@ -351,7 +378,7 @@ function runMatch(){
 }
 
 /* ---- prompt ---- */
-$("#copyPrompt").onclick=async()=>{if(!$("#cvIn").value.trim()||!jdText()){toast("Add CV and job description first");return}
+$("#copyPrompt").onclick=async()=>{if(!$("#cvIn").value.trim()||!jdText()||!(liOk()||liUrlOk())){toast("Add your CV, LinkedIn link and job first");return}
   try{await navigator.clipboard.writeText(buildPrompt());toast("Prompt copied")}catch(e){$("#promptPre").textContent=buildPrompt();$("#promptPre").classList.remove("hidden");toast("Select and copy manually")}};
 $("#showPrompt").onclick=()=>{const p=$("#promptPre");p.textContent=buildPrompt();p.classList.toggle("hidden")};
 
@@ -360,7 +387,7 @@ $("#prov").onchange=e=>{$("#model").value=e.target.value==="anthropic"?"claude-s
 $("#runApi").onclick=async()=>{
   const msg=$("#apiMsg");const key=$("#key").value.trim();
   if(!key){msg.textContent="Add an API key";return}
-  if(!$("#cvIn").value.trim()||!jdText()){msg.textContent="Add CV and job description first";return}
+  if(!$("#cvIn").value.trim()||!jdText()||!(liOk()||liUrlOk())){msg.textContent="Add your CV, LinkedIn link and job first";return}
   msg.textContent="Working, this can take a minute...";$("#runApi").disabled=true;
   try{
     let text;const prompt=buildPrompt();

@@ -22,13 +22,13 @@ INPUTS
 </COMPANY_CONTEXT>
 
 <LINKEDIN_PROFILE>
-{{OPTIONAL: PASTE LINKEDIN ABOUT AND EXPERIENCE TEXT, or write none}}
+{{LINKEDIN PROFILE URL, or the About and Experience text exported from it}}
 </LINKEDIN_PROFILE>
 
 TASK
 Work in this order, silently, then output only the JSON described below.
 
-0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
+0. If the job description field holds only a URL and you can browse, open it. If you cannot, ask the user to paste the text and stop. If LINKEDIN_PROFILE holds only a URL, open it if you can, otherwise say the cross-check was skipped and continue. If COMPANY_CONTEXT has content or a URL, use it only for tone, the cover letter opening and LinkedIn advice. Never invent facts about the company.
 1. Parse the job description. List must-have requirements, nice-to-haves, seniority signals, domain, tools, soft skills and the exact keywords an ATS would scan for.
 2. Map every requirement to evidence in the CV. Mark each as strong, partial or missing.
 2b. If LINKEDIN_PROFILE has content, cross-check it against the CV, About section and every experience entry. List real roles, achievements, skills, certifications or dates that appear on LinkedIn but not in the CV, and the reverse. Flag conflicts in titles, employers or dates. Treat both sources as the candidate's own truth, merge the union into the tailored CV, and never invent anything that is in neither. If it is empty, skip this step and leave the crosscheck lists empty.
