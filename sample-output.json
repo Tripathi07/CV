@@ -77,7 +77,8 @@
       "addIfTrue": [
         "Reduced monthly cloud spend by [percent] by [action, for example rightsizing or reserved instances].",
         "Set up [tool] dashboards so [number] teams could see their own cloud costs."
-      ]
+      ],
+      "placedIn": "Experience, Example Corp, bullet 1 (budget ownership wording)"
     }
   ],
   "linkedin": {
@@ -119,6 +120,26 @@
         "linkedin": "March 2020",
         "suggestion": "Confirm the correct date and align both."
       }
-    ]
-  }
+    ],
+    "linkedinRead": true
+  },
+  "layout": {
+    "sectionOrder": [
+      "summary",
+      "experience",
+      "skills",
+      "education",
+      "certifications"
+    ],
+    "sectionTitles": {
+      "summary": "Professional Summary",
+      "experience": "Professional Experience",
+      "skills": "Core Competencies",
+      "education": "Education",
+      "certifications": "Certifications"
+    }
+  },
+  "linkedinUsed": [
+    "Speaker at an internal cloud summit (LinkedIn About), added to the summary"
+  ]
 }
