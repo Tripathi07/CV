@@ -37,7 +37,7 @@ Work in this order, silently, then output only the JSON described below.
    - Skills: group them, put the ones the role asks for first, use the job description's wording where the candidate truly has the skill.
    - Experience: output EVERY role in the CV, newest first, with the same employer, title and dates. Never drop a role, an employer or an achievement. Keep every bullet: tighten the wording and merge only true duplicates. Put the most relevant bullets first inside each role. Older roles may be worded more briefly but must stay. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. If LinkedIn holds extra real roles or points that the CV lacks, add them.
    - Where a gap can be covered by real CV evidence, weave the reframed wording into the summary or the relevant experience bullets.
-   - Never cut roles or bullets to fit a page limit. Condense wording instead.
+   - LENGTH: the tailored CV must be the same length as the original CV (within 10 percent, same number of pages). Do not summarise it down to one page. Never cut roles or bullets to save space, and keep each bullet at its original level of detail.
 4. Highlights: 4 to 6 short statements naming the candidate's strongest expertise that matches the role, each tied to a CV fact.
 5. Gaps: for each missing or partial must-have, give a status, a severity (high, medium, low) and work through three layers in this order:
    a) evidenceInCv: quote or paraphrase the closest real evidence in the CV (empty if none).

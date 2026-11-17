@@ -60,7 +60,7 @@ ul.cp li{cursor:copy;margin:6px 0;padding:4px 8px;border-radius:6px}ul.cp.good l
 </head>
 <body>
 <header class="top noprint">
-  <h1>CVForge<small>tailor, close gaps, share &middot; v1.7</small></h1>
+  <h1>CVForge<small>tailor, close gaps, share &middot; v1.8</small></h1>
   <button class="btn ghost" id="themeBtn" type="button">Theme</button>
 </header>
 
@@ -205,7 +205,7 @@ Work in this order, silently, then output only the JSON described below.
    - Skills: group them, put the ones the role asks for first, use the job description's wording where the candidate truly has the skill.
    - Experience: output EVERY role in the CV, newest first, with the same employer, title and dates. Never drop a role, an employer or an achievement. Keep every bullet: tighten the wording and merge only true duplicates. Put the most relevant bullets first inside each role. Older roles may be worded more briefly but must stay. Start bullets with strong verbs. Keep numbers that exist in the CV, never add new ones. If LinkedIn holds extra real roles or points that the CV lacks, add them.
    - Where a gap can be covered by real CV evidence, weave the reframed wording into the summary or the relevant experience bullets.
-   - Never cut roles or bullets to fit a page limit. Condense wording instead.
+   - LENGTH: the original CV is about {{CVWORDS}} words, roughly {{CVPAGES}} page(s). The tailored CV must be the same length, within 10 percent, and fill the same number of pages. Do not summarise it down to one page. Never cut roles or bullets to save space, and keep each bullet at its original level of detail.
 4. Highlights: 4 to 6 short statements naming the candidate's strongest expertise that matches the role, each tied to a CV fact.
 5. Gaps: for each missing or partial must-have, give a status, a severity (high, medium, low) and work through three layers in this order:
    a) evidenceInCv: quote or paraphrase the closest real evidence in the CV (empty if none).
@@ -248,7 +248,7 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
 Use \\n\\n between cover letter paragraphs. Leave a field as an empty string or empty array if the CV has nothing for it.`;
 const jdText=()=>$("#jdIn").value.trim()||($("#jobUrl").value.trim()?"URL: "+$("#jobUrl").value.trim():"");
 const coText=()=>{const t=$("#coIn").value.trim(),u=$("#jobUrl").value.trim();return t||(/linkedin\.com\/company\//i.test(u)?"URL: "+u:"(none)")};
-const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CO}}",()=>coText()).replace("{{LI}}",()=>$("#liIn").value.trim()||"(none provided)");
+const buildPrompt=()=>PROMPT.replace("{{CV}}",()=>$("#cvIn").value.trim()||"(missing)").replace("{{JD}}",()=>jdText()||"(missing)").replace("{{CVWORDS}}",()=>String(wc($("#cvIn").value)||"unknown")).replace("{{CVPAGES}}",()=>String(Math.max(1,Math.round(wc($("#cvIn").value)/500))||1)).replace("{{CO}}",()=>coText()).replace("{{LI}}",()=>$("#liIn").value.trim()||"(none provided)");
 
 /* ---- input handling: status, upload, link auto-fetch ---- */
 const wc=t=>(t.trim().match(/\S+/g)||[]).length;
@@ -430,9 +430,17 @@ $("#loadJson").onclick=()=>load($("#jsonIn").value);
 const phl=t=>esc(t).replace(/\[([^\]]+)\]/g,"<mark>[$1]</mark>");
 document.addEventListener("click",async e=>{const li=e.target.closest("ul.cp li");if(!li)return;try{await navigator.clipboard.writeText(li.textContent);toast("Copied")}catch(_){}});
 
-function auditHtml(d){const a=d.audit;if(!a)return"";const rc=+a.rolesInCv||0,ro=+a.rolesInOutput||0,dr=(a.droppedItems||[]).filter(Boolean);
-  const bad=ro<rc||dr.length;const roles=(d.experience||[]).length;
-  return `<div class="card noprint" style="border-color:${bad?"var(--bad)":"var(--line)"}"><b>Completeness check:</b> CV roles ${esc(rc)}, roles in tailored CV ${esc(roles)}; bullets ${esc(a.bulletsInCv)} to ${esc(a.bulletsInOutput)}.`+(bad?` <span style="color:var(--bad)">Something may have been dropped. Re-run and ask the LLM to keep every role and bullet.</span>`:` <span style="color:var(--ok)">All roles kept.</span>`)+(dr.length?`<ul>${dr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+`</div>`}
+function cvWords(d){let n=0;const walk=(v,k)=>{if(typeof v==="string"){if(!/^(url|email|phone)$/.test(k||""))n+=(v.match(/\S+/g)||[]).length}else if(Array.isArray(v))v.forEach(x=>walk(x,k));else if(v&&typeof v==="object")for(const q in v)walk(v[q],q)};walk(shareable(d));return n}
+function auditHtml(d){const a=d.audit||{};const rc=+a.rolesInCv||0,dr=(a.droppedItems||[]).filter(Boolean);
+  const roles=(d.experience||[]).length,ow=cvWords(d),iw=wc($("#cvIn").value||""),pct=iw?Math.round(ow/iw*100):0,pg=Math.max(1,Math.ceil(ow/500));
+  const rolesBad=rc&&roles<rc,short=iw>=150&&pct<80,bad=rolesBad||short||dr.length;
+  return `<div class="card noprint" style="border-color:${bad?"var(--bad)":"var(--line)"}"><b>Completeness check</b><br>`+
+   `Roles: ${esc(rc||"?")} in CV, ${roles} in tailored CV. Bullets: ${esc(a.bulletsInCv||"?")} to ${esc(a.bulletsInOutput||"?")}.<br>`+
+   (iw?`Length: original ${iw} words, tailored ${ow} words (${pct}%), about ${pg} page${pg>1?"s":""}.`:`Tailored CV: ${ow} words, about ${pg} page${pg>1?"s":""}.`)+
+   (rolesBad?` <span style="color:var(--bad)">Roles are missing.</span>`:"")+
+   (short?` <span style="color:var(--bad)">The tailored CV is much shorter than your original. Ask the LLM: Expand it to match the original length and keep every bullet in full.</span>`:"")+
+   (!bad?` <span style="color:var(--ok)">Looks complete.</span>`:"")+
+   (dr.length?`<ul>${dr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"")+`</div>`}
 function crossHtml(d){const c=d.crosscheck;if(!c)return"";const L=k=>(c[k]||[]).filter(Boolean);const cf=(c.conflicts||[]).filter(x=>x&&x.item);
   if(!L("inLinkedInNotInCv").length&&!L("inCvNotInLinkedIn").length&&!cf.length)return`<div class="card"><h2>LinkedIn cross-check</h2><p class="muted">No differences found, or no LinkedIn profile was provided.</p></div>`;
   return `<div class="card"><h2>LinkedIn cross-check</h2>`+
@@ -499,7 +507,7 @@ function printCV(){
   const d=DATA?shareable(DATA):VIEW;
   if(!d){toast("Build your CV first");return}
   const css=document.querySelector("style").textContent;
-  const doc=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc((d.candidate||{}).name||"CV")} CV</title><style>${css}@page{margin:14mm}html,body{background:#fff!important;color:#1b1b1b}body{padding:0}.cv{border:0!important;padding:0!important;max-width:none!important;margin:0!important}</style></head><body>${cvHtml(d)}</body></html>`;
+  const doc=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc((d.candidate||{}).name||"CV")} CV</title><style>${css}@page{margin:14mm}html,body{background:#fff!important;color:#1b1b1b}body{padding:0}.cv{border:0!important;padding:0!important;max-width:none!important;margin:0!important}.cv .job{break-inside:avoid}.cv h2{break-after:avoid}</style></head><body>${cvHtml(d)}</body></html>`;
   const old=document.getElementById("printFrame");if(old)old.remove();
   const f=document.createElement("iframe");f.id="printFrame";f.setAttribute("aria-hidden","true");
   f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";

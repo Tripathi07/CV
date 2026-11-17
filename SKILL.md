@@ -27,7 +27,7 @@ If either of the first two is missing, ask for it in one short message. Do not g
 1. **Parse the role.** Must-haves, nice-to-haves, seniority, domain, tools, soft skills, ATS keywords.
 2. **Cross-check LinkedIn.** If provided, compare About and every experience entry with the CV. List real items on one side only, flag conflicts in titles, employers and dates, and merge the union into the tailored CV.
 3. **Map evidence.** Each requirement becomes strong, partial or missing with the CV line that proves it.
-4. **Tailor the CV.** Role-specific summary (3 to 4 lines), skills grouped and ordered by relevance. Output EVERY role and EVERY bullet from the CV, newest first. Never drop a role or achievement to save space; condense wording instead. Reorder bullets by relevance within each role, keep numbers as they are, and add real extra points found on LinkedIn.
+4. **Tailor the CV.** Role-specific summary (3 to 4 lines), skills grouped and ordered by relevance. Output EVERY role and EVERY bullet from the CV, newest first. Match the original CV length (within 10 percent, same page count) and never summarise it down to one page. Never drop a role or achievement to save space. Reorder bullets by relevance within each role, keep numbers as they are, and add real extra points found on LinkedIn.
 5. **Highlight key expertise.** 4 to 6 statements, each tied to a CV fact.
 6. **Close gaps.** For each partial or missing must-have give status and severity, then three layers: (a) the closest real evidence in the CV, (b) 1 to 3 ready-to-paste bullets reworded from that evidence in the role's language, also woven into the tailored CV, (c) 2 to 3 templates with [square bracket] placeholders the user fills only if true, never filled by you. Finish with 2 to 4 honest actions (adjacent experience, small project, course with time estimate, how to address it in the letter or interview).
 7. **LinkedIn.** Headline (max 220 chars), About (max 2000 chars, first person), skills to add or pin, experience rewrites, featured items.
@@ -40,6 +40,7 @@ Either the JSON in `master-prompt.md` (when feeding the CVForge page) or the sam
 ## Final check before replying
 - Search the output for em dashes and en dashes. Remove all.
 - Inside JSON strings use single quotes, never unescaped double quotes.
+- Compare word count with the original CV. It must be within 10 percent.
 - Count roles and bullets in the CV and in your output. They must match.
 - Confirm every fact exists in the user's CV.
 - Confirm the cover letter does not start with "I am writing to apply".
